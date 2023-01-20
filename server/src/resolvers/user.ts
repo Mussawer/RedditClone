@@ -2,13 +2,16 @@ import { MyContext } from "../types";
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import argon2 from "argon2";
 import { User } from "../entities/User";
-import { EntityManager } from "@mikro-orm/postgresql";
+import { COOKIE_NAME } from "../constants";
 
 //input types are used in arguments
 @InputType()
 class UsernamePasswordInput {
   @Field()
   username: string;
+
+  @Field()
+  email: string;
 
   @Field()
   password: string;
@@ -35,6 +38,12 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => Boolean)
+  async forgotPassword(@Arg("email") email: string, @Ctx() { fork, req }: MyContext) {
+    // const user = await fork.findOne(User, {email})
+    return true;
+  }
+
   @Query(() => User, { nullable: true })
   async me(@Ctx() { req, fork }: MyContext) {
     if (!req.session!.userId) {
@@ -47,7 +56,17 @@ export class UserResolver {
 
   //Mutation is for creating, deleting and updating
   @Mutation(() => UserResponse)
-  async register(@Arg("options", {nullable: true}) {username, password}: UsernamePasswordInput, @Ctx() { fork, req }: MyContext): Promise<UserResponse> {
+  async register(@Arg("options", { nullable: true }) { username, password, email }: UsernamePasswordInput, @Ctx() { fork, req }: MyContext): Promise<UserResponse> {
+    if (email.includes("@")) {
+      return {
+        errors: [
+          {
+            field: "email",
+            message: "invalid email",
+          },
+        ],
+      };
+    }
     if (username.length <= 2) {
       return {
         errors: [
@@ -69,7 +88,7 @@ export class UserResolver {
       };
     }
     const hashedPassword = await argon2.hash(password);
-    const user = fork.create(User, { username: username, password: hashedPassword });
+    const user = fork.create(User, { username: username, password: hashedPassword, email: email });
     try {
       // const result = await (fork as EntityManager)
       // .createQueryBuilder(User)
@@ -99,7 +118,7 @@ export class UserResolver {
     //store user id session
     //this will set a cookie on the user
     //keep them logged in
-    
+
     req.session!.userId = user._id;
 
     return { user };
@@ -107,9 +126,9 @@ export class UserResolver {
 
   //Mutation is for creating, deleting and updating
   @Mutation(() => UserResponse)
-  async login(@Arg("options") options: UsernamePasswordInput, @Ctx() { fork, req }: MyContext): Promise<UserResponse | null> {
+  async login(@Arg("usernameOrEmail") usernameOrEmail: string, @Arg("password") password: string, @Ctx() { fork, req }: MyContext): Promise<UserResponse | null> {
     try {
-      const user = await fork.findOne(User, { username: options.username });
+      const user = await fork.findOne(User, usernameOrEmail.includes("@") ? { email: usernameOrEmail } : { username: usernameOrEmail });
       if (!user) {
         return {
           errors: [
@@ -120,7 +139,7 @@ export class UserResolver {
           ],
         };
       }
-      const valid = await argon2.verify(user?.password, options.password);
+      const valid = await argon2.verify(user?.password, password);
       if (!valid) {
         return {
           errors: [
@@ -139,5 +158,20 @@ export class UserResolver {
       console.error(error.message);
       return null;
     }
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: MyContext) {
+    return new Promise((resolve) =>
+      req.session?.destroy((error) => {
+        res.clearCookie(COOKIE_NAME);
+        if (error) {
+          console.log("🚀 ~ file: user.ts:149 ~ req.session?.destroy ~ error", error);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 }

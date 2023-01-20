@@ -7,21 +7,25 @@
     "codegen": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^1.21.6",
-    "@graphql-codegen/typescript": "^1.22.4",
-    "@graphql-codegen/typescript-operations": "^1.18.3",
     "@chakra-ui/icons": "^2.0.2",
     "@chakra-ui/react": "^2.2.1",
     "@chakra-ui/theme-tools": "^2.0.2",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.9.0",
+    "@graphql-codegen/cli": "^1.21.6",
+    "@graphql-codegen/typescript": "^1.22.4",
+    "@graphql-codegen/typescript-operations": "^1.18.3",
+    "@urql/exchange-graphcache": "^5.0.8",
     "formik": "^2.2.9",
     "framer-motion": "^6.3.0",
     "global": "^4.4.0",
     "graphql": "^15.7.2",
+    "isomorphic-unfetch": "^4.0.2",
     "next": "latest",
+    "next-urql": "^4.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-is": "^18.2.0",
     "urql": "^3.0.3"
   },
   "devDependencies": {
