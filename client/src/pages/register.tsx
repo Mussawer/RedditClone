@@ -1,8 +1,8 @@
 import React, { FC } from "react";
 import { Formik, Form } from "formik";
 import { Box, Button } from "@chakra-ui/react";
-import { Wrapper } from "../components/wrapper";
-import { InputField } from "../components/inputField";
+import { Wrapper } from "../components/Wrapper";
+import { InputField } from "../components/InputField";
 import { useRegisterUserMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
@@ -19,7 +19,7 @@ const Register: FC<registerProps> = ({}) => {
   return (
     <Wrapper variant={"small"}>
       <Formik
-        initialValues={{username: "", password: "" }}
+        initialValues={{username: "", password: "", email: "" }}
         onSubmit={async (values, {setErrors}) => {
           const options = {options:{...values}}
           const response = await register(options)
@@ -34,9 +34,9 @@ const Register: FC<registerProps> = ({}) => {
         {({ values, handleChange, isSubmitting }) => (
           <Form>
             <InputField name="username" label="Username" placeholder="Username" value={values.username} />
-            {/* <Box mt={4}>
+            <Box mt={4}>
               <InputField name="email" label="Email" placeholder="Email" value={values.email} />
-            </Box> */}
+            </Box>
             <Box mt={4}>
               <InputField name="password" label="Password" placeholder="Password" value={values.password} type={"password"} />
             </Box>

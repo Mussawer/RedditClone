@@ -1,55 +1,59 @@
 import { Post } from "../entities/Post";
+import { Query, Resolver, Arg, Mutation, InputType, Field, Ctx, UseMiddleware } from "type-graphql";
+import dataSource from "../datasource";
 import { MyContext } from "src/types";
-import { Ctx, Query, Resolver, Arg, Int, Mutation } from "type-graphql";
+import { isAuth } from "../middleware/isAuth";
 
+
+@InputType()
+class PostInput {
+  @Field()
+  title: string;
+  @Field()
+  text: string;
+}
 
 //graphql works with and decorators
 @Resolver()
 export class PostResolver {
-    //this decorator is taking posts as a function and returs an array of strings 
-    //Query is for getting data
-    @Query(() => [Post])
-    posts(@Ctx() { fork }: MyContext): Promise<Post[]> {
-        return fork.find(Post, {})
-    }
-    
-    @Query(() => Post, { nullable: true })
-    post(@Arg("_id", () => Int) _id: number,
-        @Ctx() { fork }: MyContext
-    ): Promise<Post | null> {
-        return fork.findOne(Post, { _id })
-    }
+  //this decorator is taking posts as a function and returs an array of strings
+  //Query is for getting data
+  @Query(() => [Post])
+  posts(): Promise<Post[]> {
+    return Post.find();
+  }
 
-    //Mutation is for creating, deleting and updating
-    @Mutation(() => Post)
-    async createPost(@Arg("title") title: string,
-        @Ctx() { fork }: MyContext
-    ): Promise<Post | null> {
-        const post = fork.create(Post, { title })
-        await fork.persistAndFlush(post)
-        return post
-    }
+  @Query(() => Post, { nullable: true })
+  post(@Arg("_id") _id: number): Promise<Post | null> {
+    const postRepository = dataSource.getRepository(Post);
+    return postRepository.findOne({ where: { _id } });
+  }
 
-    @Mutation(() => Post, { nullable: true })
-    async updatePost(@Arg("_id") _id: number, @Arg("title", () => String, { nullable: true }) title: string,
-        @Ctx() { fork }: MyContext
-    ): Promise<Post | null> {
-        const post = await fork.findOne(Post, { _id })
-        if (!post) {
-            return null
-        }
-        if(typeof title !== "undefined"){
-            post.title = title
-            await fork.persistAndFlush(post)
-        }
-        return post
-    }
+  //Mutation is for creating, deleting and updating
+  @Mutation(() => Post)
+  @UseMiddleware(isAuth)
+  async createPost(@Arg("options") options: PostInput, @Ctx() {req}: MyContext): Promise<Post | null> {
+    return Post.create({ 
+        ...options,
+        creatorId: req.session.userId
+     }).save();
+  }
 
-    @Mutation(() => Boolean, { nullable: true })
-    async deletePost(@Arg("_id") _id: number,
-        @Ctx() { fork }: MyContext
-    ): Promise<Boolean> {
-        await fork.nativeDelete(Post, {_id})
-        return true
+  @Mutation(() => Post, { nullable: true })
+  async updatePost(@Arg("_id") _id: number, @Arg("title", () => String, { nullable: true }) title: string): Promise<Post | null> {
+    const post = await Post.findOne({ where: { _id } });
+    if (!post) {
+      return null;
     }
+    if (typeof title !== "undefined") {
+      await Post.update({ _id }, { title });
+    }
+    return post;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async deletePost(@Arg("_id") _id: number): Promise<Boolean> {
+    await Post.delete(_id);
+    return true;
+  }
 }

@@ -1,8 +1,9 @@
-import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core"
 import { Request, Response } from "express"
+import Redis from "ioredis";
 
 export type MyContext = {
-    fork: EntityManager<IDatabaseDriver<Connection>>,
-    req: Request,
+    // fork: EntityManager<IDatabaseDriver<Connection>>, microOrm
+    req: Request & { session: Express.Session };
+    redis: Redis;
     res: Response
 }
