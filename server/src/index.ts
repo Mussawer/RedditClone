@@ -14,7 +14,7 @@ import dataSource from "./datasource";
 const main = async () => {
 
   await dataSource.initialize();
-
+  await dataSource.runMigrations()
   // const orm = await MikroORM.init(mikroOrmConfig);
   // await orm.getMigrator().up(); for micro-orm
 

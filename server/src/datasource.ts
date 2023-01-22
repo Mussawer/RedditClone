@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import { __prod__ } from "./constants";
+import path from "path"
 
 const dataSource = new DataSource({
   entities: ["dist/entities/*js"], // path to our JS entities (dist), relative to `baseDir`
@@ -9,8 +10,8 @@ const dataSource = new DataSource({
   type: "postgres",
   logging: !__prod__,
   synchronize: true,
-  port: 5433
-//   migrations: ["dist/migrations/*.js"],
+  port: 5433,
+  migrations: [path.join(__dirname, "./migrations/*")],
 //   migrationsTableName: "migrations",
 });
 

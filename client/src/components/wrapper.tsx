@@ -5,7 +5,8 @@ import { PropsWithChildren } from 'react';
 export type WrapperVariant = "small" | "regular";
 
 interface WrapperProps {
-  variant?: "small" | "regular";
+  variant?: WrapperVariant;
+  children?: React.ReactNode;
 }
 
 export const Wrapper: React.FC<PropsWithChildren<WrapperProps>> = ({

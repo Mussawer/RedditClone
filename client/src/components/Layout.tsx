@@ -1,17 +1,21 @@
-import React, { FC } from 'react'
-import Navbar from './Navbar';
-import { Wrapper } from './wrapper';
+import React, { FC, ReactNode } from "react";
+import Navbar from "./Navbar";
+import { Wrapper, WrapperVariant } from "./Wrapper";
 
 interface LayoutProps {
-    variant?: "small" | "regular";
+  variant?: WrapperVariant;
+  children?: ReactNode;
 }
 
-const Layout: FC<LayoutProps> = ({  }) => {
+const Layout: FC<LayoutProps> = ({ children, variant }) => {
   return (
-    <Wrapper>
-        <Navbar/>
-    </Wrapper>
-  )
-}
+    <>
+      <Navbar />
+      <Wrapper variant={variant}>
+        {children}
+      </Wrapper>
+    </>
+  );
+};
 
 export default Layout;

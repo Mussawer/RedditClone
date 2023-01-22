@@ -30,7 +30,11 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
   @Mutation(() => UserResponse)
-  async changePassword(@Arg("token") token: string, @Arg("newPassword") newPassword: string, @Ctx() { redis, req }: MyContext): Promise<UserResponse> {
+  async changePassword(
+    @Arg("token") token: string,
+    @Arg("newPassword") newPassword: string,
+    @Ctx() { redis, req }: MyContext
+  ): Promise<UserResponse> {
     if (newPassword.length <= 2) {
       return {
         errors: [
@@ -93,7 +97,10 @@ export class UserResolver {
     }
     const token = v4();
     await redis.set(FORGET_PASSWORD_PREFIX + token, user._id, "EX", 1000 * 60 * 60 * 24); // 1day
-    await sendEmail(email, `<a href="http://localhost:3001/change-password/${token}">reset password</a>`);
+    await sendEmail(
+      email,
+      `<a href="http://localhost:3001/change-password/${token}">reset password</a>`
+    );
     return true;
   }
 
@@ -109,7 +116,10 @@ export class UserResolver {
 
   //Mutation is for creating, deleting and updating
   @Mutation(() => UserResponse)
-  async register(@Arg("options", { nullable: true }) { username, password, email }: UsernamePasswordInput, @Ctx() { req }: MyContext): Promise<UserResponse> {
+  async register(
+    @Arg("options", { nullable: true }) { username, password, email }: UsernamePasswordInput,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse> {
     const errors = validateRegister({ username, password, email });
     if (errors) {
       return { errors };
@@ -128,7 +138,13 @@ export class UserResolver {
       // })
       // .returning("*");
       // user = result[0];
-      const result = await dataSource.createQueryBuilder().insert().into(User).values({ username: username, password: hashedPassword, email: email }).returning("*").execute();
+      const result = await dataSource
+        .createQueryBuilder()
+        .insert()
+        .into(User)
+        .values({ username: username, password: hashedPassword, email: email })
+        .returning("*")
+        .execute();
       user = result.raw[0];
     } catch (error) {
       if (error.code === "23505" || error.detail.includes("already exist")) {
@@ -154,9 +170,17 @@ export class UserResolver {
 
   //Mutation is for creating, deleting and updating
   @Mutation(() => UserResponse)
-  async login(@Arg("usernameOrEmail") usernameOrEmail: string, @Arg("password") password: string, @Ctx() { req }: MyContext): Promise<UserResponse | null> {
+  async login(
+    @Arg("usernameOrEmail") usernameOrEmail: string,
+    @Arg("password") password: string,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse | null> {
     try {
-      const user = await User.findOne(usernameOrEmail.includes("@") ? { where: { email: usernameOrEmail } } : { where: { username: usernameOrEmail } });
+      const user = await User.findOne(
+        usernameOrEmail.includes("@")
+          ? { where: { email: usernameOrEmail } }
+          : { where: { username: usernameOrEmail } }
+      );
       if (!user) {
         return {
           errors: [

@@ -49,7 +49,7 @@ const Navbar: FC<NavbarProps> = ({}) => {
     );
   }
   return (
-    <Flex bg="teal" padding={4}>
+    <Flex zIndex={1} position={'sticky'} top={0} bg="teal" padding={4}>
       <Box marginLeft={"auto"}>{body}</Box>
     </Flex>
   );
