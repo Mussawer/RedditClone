@@ -23,13 +23,13 @@ const main = async () => {
   const RedisStore = connectRedis(session);
   let redis = new Redis();
 
-  // app.set("trust proxy", 1);
+  app.set("trust proxy", 1);
   const corsConfig = {
     // origin: "*",
     // methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     // preflightContinue: false,
     // optionsSuccessStatus: 204,
-    origin:"http://localhost:3001",
+    origin:"http://localhost:3000",
     credentials:true
   };
   app.use(cors(corsConfig));
@@ -69,7 +69,7 @@ const main = async () => {
 
   apolloServer.applyMiddleware({
     app,
-    // path: '/',
+    path: '/',
     // cors:{
     //   origin:"http://localhost:3000",
     //   credentials:true

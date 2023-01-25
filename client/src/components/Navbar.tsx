@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Link } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Link } from "@chakra-ui/react";
 import React, { FC } from "react";
 import NextLink from "next/link";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
@@ -7,7 +7,7 @@ import { isServer } from "../utils/isServer";
 interface NavbarProps {}
 
 const Navbar: FC<NavbarProps> = ({}) => {
-  const [{fetching: logoutFetching}, logout] = useLogoutMutation();
+  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
   const [{ data, fetching }] = useMeQuery({
     pause: isServer(),
   });
@@ -19,28 +19,31 @@ const Navbar: FC<NavbarProps> = ({}) => {
   else if (!data?.me) {
     body = (
       <>
-        <NextLink href="/login">
-          <Link color={"white"} marginRight={2}>
-            Login
-          </Link>
-        </NextLink>
-        <NextLink href="/register">
-          <Link color={"white"}>Register</Link>
-        </NextLink>
+        <Link as={NextLink} href="/login" color={"white"} marginRight={2}>
+          Login
+        </Link>
+        <Link as={NextLink} color={"white"} href="/register">
+          Register
+        </Link>
       </>
     );
   }
   //user is logged in
   else {
     body = (
-      <Flex>
-        <Box marginRight={2}>{data.me.username}</Box>
+      <Flex align="center">
+        <NextLink href="/create-post">
+          <Button variant="link" mr={4} color={"white"}>
+            create post
+          </Button>
+        </NextLink>
+        <Box mr={2}>{data.me.username}</Box>
         <Button
-          variant={"link"}
           onClick={async () => {
-            await logout();
+            await logout({});
           }}
           isLoading={logoutFetching}
+          variant="link"
           color={"white"}
         >
           logout
@@ -49,8 +52,13 @@ const Navbar: FC<NavbarProps> = ({}) => {
     );
   }
   return (
-    <Flex zIndex={1} position={'sticky'} top={0} bg="teal" padding={4}>
-      <Box marginLeft={"auto"}>{body}</Box>
+    <Flex zIndex={1} position="sticky" top={0} bg="teal" p={4}>
+      <Flex flex={1} m="auto" align="center" maxW={800}>
+        <Link as={NextLink} href="/">
+          <Heading>Reddit Clone</Heading>
+        </Link>
+        <Box ml={"auto"}>{body}</Box>
+      </Flex>
     </Flex>
   );
 };

@@ -1,73 +1,50 @@
-import { Box, Button, Flex, Heading, Link, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
 import { withUrqlClient } from "next-urql";
 import Layout from "../components/Layout";
 import { useGetAllPostsQuery } from "../generated/graphql";
 import { createUrqlCLient } from "../utils/createUrqlClient";
-import NextLink from "next/link";
 import { useState } from "react";
+import VoteSection from "../components/VoteSection";
 
 const Index = () => {
-  const [variables, setVariables] = useState({ limit: 10, cursor: null });
+  const [variables, setVariables] = useState({
+    limit: 15,
+    cursor: null as null | string,
+  });
   const [{ data, fetching }] = useGetAllPostsQuery({
     variables,
   });
+  console.log("🚀 ~ file: index.tsx:15 ~ Index ~ data", data);
   return (
     <Layout>
-      <NextLink href={"/create-post"}>
-        <Link>Create Post</Link>
-      </NextLink>
-      <div>Hello</div>
-      <br />
-
-      {fetching && !data ? (
+      {!data && fetching ? (
         <div>loading...</div>
       ) : (
         <Stack spacing={8}>
-          {data.posts.posts.map((p) => (
-            <Box key={p._id} padding={5} shadow="md" borderWidth={1}>
-              <Heading fontSize={"xl"}>{p.title}</Heading>
-              <Text marginTop={4}>{p.textSnippet}</Text>
-            </Box>
+          {data?.posts.posts.map((p) => (
+            <Flex key={p._id} p={5} shadow="md" borderWidth="1px">
+              <VoteSection post={p} />
+              <Box>
+                <Heading fontSize="xl">{p.title}</Heading>
+                <Text>posted by {p.creator.username}</Text>
+                <Text mt={4}>{p.textSnippet}</Text>
+              </Box>
+            </Flex>
           ))}
         </Stack>
       )}
       {data && data.posts.hasMore ? (
         <Flex>
           <Button
-            // onClick={() => {
-            //   fetchMore({
-            //     variables: {
-            //       limit: variables?.limit,
-            //       cursor:
-            //         data.posts.posts[data.posts.posts.length - 1].createdAt,
-            //     },
-            //     // updateQuery: (
-            //     //   previousValue,
-            //     //   { fetchMoreResult }
-            //     // ): PostsQuery => {
-            //     //   if (!fetchMoreResult) {
-            //     //     return previousValue as PostsQuery;
-            //     //   }
-
-            //     //   return {
-            //     //     __typename: "Query",
-            //     //     posts: {
-            //     //       __typename: "PaginatedPosts",
-            //     //       hasMore: (fetchMoreResult as PostsQuery).posts.hasMore,
-            //     //       posts: [
-            //     //         ...(previousValue as PostsQuery).posts.posts,
-            //     //         ...(fetchMoreResult as PostsQuery).posts.posts,
-            //     //       ],
-            //     //     },
-            //     //   };
-            //     // },
-            //   });
-            // }}
-            // isLoading={loading}
-            // m="auto"
-            my={8}
+            onClick={() => {
+              setVariables({
+                limit: variables.limit,
+                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
+              });
+            }}
             isLoading={fetching}
             m="auto"
+            my={8}
           >
             load more
           </Button>

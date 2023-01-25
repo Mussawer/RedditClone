@@ -35,14 +35,25 @@ const Login: FC<loginProps> = ({}) => {
       >
         {({ values, handleChange, isSubmitting }) => (
           <Form>
-            <InputField name="usernameOrEmail" label="Username or Email" placeholder="Username or Email" value={values.usernameOrEmail} />
+            <InputField
+              name="usernameOrEmail"
+              label="Username or Email"
+              placeholder="Username or Email"
+              value={values.usernameOrEmail}
+            />
             <Box mt={4}>
-              <InputField name="password" label="Password" placeholder="Password" value={values.password} type={"password"} />
+              <InputField
+                name="password"
+                label="Password"
+                placeholder="Password"
+                value={values.password}
+                type={"password"}
+              />
             </Box>
             <Flex mt={2}>
-              <NextLink href="/forgot-password">
-                <Link ml="auto">forgot password?</Link>
-              </NextLink>
+              <Link as={NextLink} href="/forgot-password" ml="auto">
+                forgot password?
+              </Link>
             </Flex>
             <Button mt={4} colorScheme="teal" type="submit" isLoading={isSubmitting}>
               Login

@@ -20,7 +20,10 @@ const ChangePassword: NextPage = () => {
       <Formik
         initialValues={{ newPassword: "" }}
         onSubmit={async (values, { setErrors }) => {
-          const response = await ChangePassword({ newPassword: values.newPassword, token: typeof router.query.token === "string" ? router.query.token : "" });
+          const response = await ChangePassword({
+            newPassword: values.newPassword,
+            token: typeof router.query.token === "string" ? router.query.token : "",
+          });
           if (response.data?.changePassword.errors) {
             const errorMap = toErrorMap(response.data?.changePassword.errors);
             if ("token" in errorMap) {
@@ -34,15 +37,21 @@ const ChangePassword: NextPage = () => {
       >
         {({ values, isSubmitting }) => (
           <Form>
-            <InputField name="newPassword" label="New Password" placeholder="New Password" value={values.newPassword} type={"password"} />
+            <InputField
+              name="newPassword"
+              label="New Password"
+              placeholder="New Password"
+              value={values.newPassword}
+              type={"password"}
+            />
             {tokenError ? (
               <Flex>
                 <Box mr={2} style={{ color: "red" }}>
                   {tokenError}
                 </Box>
-                <NextLink href="/forgot-password">
-                  <Link>click here to get a new one</Link>
-                </NextLink>
+                <Link as={NextLink} href="/forgot-password">
+                  click here to get a new one
+                </Link>
               </Flex>
             ) : null}
             <Button mt={4} colorScheme="teal" type="submit" isLoading={isSubmitting}>

@@ -1,5 +1,15 @@
 import { MyContext } from "../types";
-import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Field,
+  FieldResolver,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+  Root,
+} from "type-graphql";
 import argon2 from "argon2";
 import { User } from "../entities/User";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
@@ -27,8 +37,16 @@ class UserResponse {
   errors?: FieldError[];
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
+    //current user its ok to show their own email
+    if (req.session.userId === user._id) {
+      return user.email;
+    }
+    return "";
+  }
   @Mutation(() => UserResponse)
   async changePassword(
     @Arg("token") token: string,
@@ -218,7 +236,6 @@ export class UserResolver {
       req.session?.destroy((error) => {
         res.clearCookie(COOKIE_NAME);
         if (error) {
-          console.log("🚀 ~ file: user.ts:149 ~ req.session?.destroy ~ error", error);
           resolve(false);
           return;
         }
