@@ -10,6 +10,8 @@ import Redis from "ioredis";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import dataSource from "./datasource";
+import { createUserLoader } from "./utils/createUserLoader";
+import { createVoteLoader } from "./utils/createVoteLoader";
 
 const main = async () => {
 
@@ -61,7 +63,9 @@ const main = async () => {
       // fork: orm.em.fork(), for micro-orm
       req,
       res,
-      redis
+      redis,
+      userLoader: createUserLoader(),
+      voteLoader: createVoteLoader()  
     }),
   });
 

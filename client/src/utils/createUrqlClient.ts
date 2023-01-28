@@ -1,7 +1,8 @@
 import { createClient, dedupExchange, Exchange, fetchExchange, Provider, ssrExchange } from "urql";
-import { cacheExchange, Resolver } from "@urql/exchange-graphcache";
+import { cacheExchange, Resolver, Cache } from "@urql/exchange-graphcache";
 import {
   CreatePostMutation,
+  DeletePostMutationVariables,
   LoginMutation,
   LogoutMutation,
   MeDocument,
@@ -61,6 +62,14 @@ const cursorPagination = (): Resolver => {
   };
 };
 
+function invalidateAllPosts(cache: Cache) {
+  const allFields = cache.inspectFields("Query");
+  const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
+  fieldInfos.forEach((fi) => {
+    cache.invalidate("Query", "posts", fi.arguments || {});
+  });
+}
+
 export const createUrqlCLient = (ssrExchange: any, ctx: any) => {
   let cookie = "";
   if (isServer()) {
@@ -90,6 +99,12 @@ export const createUrqlCLient = (ssrExchange: any, ctx: any) => {
         //updates the urql cache whenever login and register runs
         updates: {
           Mutation: {
+            deltePost: (result, args, cache, info) => {
+              cache.invalidate({
+                __typename: "Post",
+                _id: (args as DeletePostMutationVariables)._id,
+              });
+            },
             vote: (result, args, cache, info) => {
               const { postId, value } = args as VoteMutationVariables;
               const data = cache.readFragment(
@@ -126,11 +141,7 @@ export const createUrqlCLient = (ssrExchange: any, ctx: any) => {
             //on client side removing the data from cache
             //and reload the data
             createPost: (_result, args, cache, info) => {
-              const allFields = cache.inspectFields("Query");
-              const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
-              fieldInfos.forEach((fi) => {
-                cache.invalidate("Query", "posts", fi.arguments || {});
-              });
+              invalidateAllPosts(cache);
             },
             logout: (_result, args, cache, info) => {
               betterUpdateQuery<LogoutMutation, MeQuery>(
@@ -155,6 +166,7 @@ export const createUrqlCLient = (ssrExchange: any, ctx: any) => {
                   }
                 }
               );
+              invalidateAllPosts(cache)
             },
             register: (_result, args, cache, info) => {
               betterUpdateQuery<RegisterUserMutation, MeQuery>(

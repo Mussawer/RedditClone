@@ -1,10 +1,12 @@
-import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, IconButton, Link, Stack, Text } from "@chakra-ui/react";
 import { withUrqlClient } from "next-urql";
 import Layout from "../components/Layout";
 import { useGetAllPostsQuery } from "../generated/graphql";
 import { createUrqlCLient } from "../utils/createUrqlClient";
 import { useState } from "react";
 import VoteSection from "../components/VoteSection";
+import NextLink from "next/link";
+import EditDeletePostButtons from "../components/EditDeletePostButtons";
 
 const Index = () => {
   const [variables, setVariables] = useState({
@@ -21,13 +23,23 @@ const Index = () => {
         <div>loading...</div>
       ) : (
         <Stack spacing={8}>
-          {data?.posts.posts.map((p) => (
+          {data?.posts.posts.map((p) => !p ? null : (
             <Flex key={p._id} p={5} shadow="md" borderWidth="1px">
               <VoteSection post={p} />
-              <Box>
-                <Heading fontSize="xl">{p.title}</Heading>
+              <Box flex={1}>
+                <Link as={NextLink} href={`/post/${p._id}`}>
+                  <Heading fontSize="xl">{p.title}</Heading>
+                </Link>
                 <Text>posted by {p.creator.username}</Text>
-                <Text mt={4}>{p.textSnippet}</Text>
+                <Flex>
+                  <Text mt={4}>{p.textSnippet}</Text>
+                  <Box ml="auto">
+                      <EditDeletePostButtons
+                        _id={p._id}
+                        creatorId={p.creator._id}
+                      />
+                    </Box>
+                </Flex>
               </Box>
             </Flex>
           ))}

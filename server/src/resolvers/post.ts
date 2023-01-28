@@ -17,6 +17,7 @@ import dataSource from "../datasource";
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { Vote } from "../entities/Vote";
+import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -40,6 +41,25 @@ export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(@Root() root: Post) {
     return root.text.slice(0, 50);
+  }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(post.creatorId);
+  }
+
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(@Root() post: Post, @Ctx() { voteLoader, req }: MyContext) {
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const vote = await voteLoader.load({
+      postId: post._id,
+      userId: req.session.userId,
+    });
+
+    return vote ? vote.value : null;
   }
 
   @Mutation(() => Boolean)
@@ -114,36 +134,29 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const reaLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [reaLimitPlusOne, req.session.userId];
+    const replacements: any[] = [reaLimitPlusOne];
 
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
     }
+    console.log("🚀 ~ file: post.ts:144 ~ replacements", replacements);
 
-    const posts = await dataSource.query(
-      `
-    select p.*,
-    json_build_object(
-      '_id', u._id,
-      'username', u.username,
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
-      ) creator,
-    ${
-      req.session.userId
-        ? '(select value from votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
-        : 'null as "voteStatus"'
-    }
+    const posts = await dataSource
+      .query(
+        `
+    select p.*
     from post p
-    inner join public.user u on u._id = p."creatorId"
-    ${cursor ? `where p."createdAt" < $3` : ""}
+    ${cursor ? `where p."createdAt" < $2` : ""}
     order by p."createdAt" DESC
     limit $1
     `,
-      replacements
-    );
-
+        replacements
+      )
+      .catch((error) => {
+        console.log("🚀 ~ file: post.ts:156 ~ error", error)
+        
+      });
+    console.log("🚀 ~ file: post.ts:156 ~ posts", posts);
 
     return {
       posts: posts.slice(0, realLimit),
@@ -176,23 +189,34 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async updatePost(
-    @Arg("_id") _id: number,
-    @Arg("title", () => String, { nullable: true }) title: string
+    @Arg("_id", () => Int) _id: number,
+    @Arg("title") title: string,
+    @Arg("text") text: string,
+    @Ctx() { req }: MyContext
   ): Promise<Post | null> {
-    const post = await Post.findOne({ where: { _id } });
-    if (!post) {
-      return null;
-    }
-    if (typeof title !== "undefined") {
-      await Post.update({ _id }, { title });
-    }
-    return post;
+    const result = await dataSource
+      .createQueryBuilder()
+      .update(Post)
+      .set({ title, text })
+      .where('_id = :_id and "creatorId" = :creatorId', {
+        _id,
+        creatorId: req.session.userId,
+      })
+      .returning("*")
+      .execute();
+
+    return result.raw[0];
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  async deletePost(@Arg("_id") _id: number): Promise<Boolean> {
-    await Post.delete(_id);
+  @UseMiddleware(isAuth)
+  async deletePost(
+    @Arg("_id", () => Int) _id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<Boolean> {
+    await Post.delete({ _id, creatorId: req.session.userId });
     return true;
   }
 }
