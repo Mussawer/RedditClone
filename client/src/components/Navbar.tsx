@@ -9,13 +9,13 @@ interface NavbarProps {}
 
 const Navbar: FC<NavbarProps> = ({}) => {
   const router = useRouter();
-  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
-  const [{ data, fetching }] = useMeQuery({
-    pause: isServer(),
+  const [logout, { loading: logoutFetching }] = useLogoutMutation();
+  const { data, loading } = useMeQuery({
+    skip: isServer(),
   });
   let body = null;
   //data is loading
-  if (fetching) {
+  if (loading) {
   }
   //user not found
   else if (!data?.me) {

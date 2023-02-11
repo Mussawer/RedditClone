@@ -127,8 +127,7 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { req }: MyContext
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
     // 20 -> 21
     const realLimit = Math.min(50, limit);
@@ -139,7 +138,6 @@ export class PostResolver {
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
     }
-    console.log("🚀 ~ file: post.ts:144 ~ replacements", replacements);
 
     const posts = await dataSource
       .query(
@@ -156,7 +154,6 @@ export class PostResolver {
         console.log("🚀 ~ file: post.ts:156 ~ error", error)
         
       });
-    console.log("🚀 ~ file: post.ts:156 ~ posts", posts);
 
     return {
       posts: posts.slice(0, realLimit),

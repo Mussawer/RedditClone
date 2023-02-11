@@ -128,7 +128,10 @@ export class UserResolver {
       return null;
     }
 
-    const user = await User.findOne({ where: { _id: req.session!.userId } });
+    const user = await User.findOne({ where: { _id: req.session!.userId } }).catch((error) => {
+      console.log("🚀 ~ file: user.ts:132 ~ me ~ error", error);
+    });
+    console.log("🚀 ~ file: user.ts:134 ~ me ~ user", user)
     return user;
   }
 

@@ -99,7 +99,7 @@ export const createUrqlCLient = (ssrExchange: any, ctx: any) => {
         //updates the urql cache whenever login and register runs
         updates: {
           Mutation: {
-            deltePost: (result, args, cache, info) => {
+            deletePost: (result, args, cache, info) => {
               cache.invalidate({
                 __typename: "Post",
                 _id: (args as DeletePostMutationVariables)._id,
